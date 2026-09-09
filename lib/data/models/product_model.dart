@@ -1,98 +1,88 @@
-// lib/data/models/product_model.dart
-import '../../../domain/entities/product_entity.dart';
+// lib/data/models/recommended_product_model.dart
+//
+// Mapea 1:1 el dict que produce RankedProduct.to_dict() en el backend:
+// {
+//   "product_id": ..., "name": ..., "category": ..., "price": ...,
+//   "stock": ..., "status": ..., "relevance": ..., "pareto_rank": ...,
+//   "pareto_front": ...
+// }
+import '../../domain/entities/recommended_product_entity.dart';
 
-class ProductModel {
-  final String id;
+class RecommendedProductModel {
+  final String productId;
   final String name;
-  final String description;
-  final double price;
-  final double? discountPrice;
   final String category;
-  final String imageUrl;
+  final double price;
   final int stock;
-  final double rating;
-  final bool isFeatured;
-  final String createdAt;
-  
-  ProductModel({
-    required this.id,
+  final String status;
+  final double relevance;
+  final int paretoRank;
+  final bool paretoFront;
+
+  RecommendedProductModel({
+    required this.productId,
     required this.name,
-    required this.description,
-    required this.price,
-    this.discountPrice,
     required this.category,
-    required this.imageUrl,
+    required this.price,
     required this.stock,
-    this.rating = 0.0,
-    this.isFeatured = false,
-    required this.createdAt,
+    required this.status,
+    required this.relevance,
+    required this.paretoRank,
+    required this.paretoFront,
   });
-  
-  // Convertir JSON a Modelo
-  factory ProductModel.fromJson(Map<String, dynamic> json) {
-    return ProductModel(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      description: json['description'] ?? '',
-      price: (json['price'] ?? 0).toDouble(),
-      discountPrice: json['discountPrice']?.toDouble(),
-      category: json['category'] ?? '',
-      imageUrl: json['imageUrl'] ?? '',
-      stock: json['stock'] ?? 0,
-      rating: (json['rating'] ?? 0).toDouble(),
-      isFeatured: json['isFeatured'] ?? false,
-      createdAt: json['createdAt'] ?? '',
+
+  factory RecommendedProductModel.fromJson(Map<String, dynamic> json) {
+    return RecommendedProductModel(
+      productId: json['product_id'] as String,
+      name: json['name'] as String,
+      category: json['category'] as String,
+      price: (json['price'] as num).toDouble(),
+      stock: json['stock'] as int,
+      status: json['status'] as String,
+      relevance: (json['relevance'] as num).toDouble(),
+      paretoRank: json['pareto_rank'] as int,
+      paretoFront: json['pareto_front'] as bool,
     );
   }
-  
-  // Convertir Modelo a JSON
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'description': description,
-      'price': price,
-      'discountPrice': discountPrice,
-      'category': category,
-      'imageUrl': imageUrl,
-      'stock': stock,
-      'rating': rating,
-      'isFeatured': isFeatured,
-      'createdAt': createdAt,
-    };
-  }
-  
-  // Convertir Modelo a Entidad
-  ProductEntity toEntity() {
-    return ProductEntity(
-      id: id,
+
+  RecommendedProductEntity toEntity() {
+    return RecommendedProductEntity(
+      productId: productId,
       name: name,
-      description: description,
-      price: price,
-      discountPrice: discountPrice,
       category: category,
-      imageUrl: imageUrl,
+      price: price,
       stock: stock,
-      rating: rating,
-      isFeatured: isFeatured,
-      createdAt: DateTime.parse(createdAt),
+      status: status,
+      relevanceScore: relevance,
+      paretoRank: paretoRank,
+      isParetoFront: paretoFront,
     );
   }
-  
-  // Convertir Entidad a Modelo
-  factory ProductModel.fromEntity(ProductEntity entity) {
-    return ProductModel(
-      id: entity.id,
-      name: entity.name,
-      description: entity.description,
-      price: entity.price,
-      discountPrice: entity.discountPrice,
-      category: entity.category,
-      imageUrl: entity.imageUrl,
-      stock: entity.stock,
-      rating: entity.rating,
-      isFeatured: entity.isFeatured,
-      createdAt: entity.createdAt.toIso8601String(),
+}
+
+/// Mapea la respuesta completa del endpoint
+/// (schemas.RecommendationResponse: user_id, count, products, pareto_front_n).
+class RecommendationResponseModel {
+  final String userId;
+  final int count;
+  final List<RecommendedProductModel> products;
+  final int paretoFrontN;
+
+  RecommendationResponseModel({
+    required this.userId,
+    required this.count,
+    required this.products,
+    required this.paretoFrontN,
+  });
+
+  factory RecommendationResponseModel.fromJson(Map<String, dynamic> json) {
+    return RecommendationResponseModel(
+      userId: json['user_id'] as String,
+      count: json['count'] as int,
+      products: (json['products'] as List)
+          .map((e) => RecommendedProductModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      paretoFrontN: json['pareto_front_n'] as int,
     );
   }
 }
