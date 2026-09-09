@@ -1,52 +1,48 @@
-// lib/domain/entities/product_entity.dart
+// lib/domain/entities/recommended_product_entity.dart
+//
+// Representa un producto tal como lo devuelve el motor de recomendación
+// del backend (RankedProduct.to_dict() en services/recommendation.py):
+// no es lo mismo que ProductEntity (que usan Products/Home con datos mock),
+// porque trae campos propios del ranking: relevancia y posición en el
+// frente de Pareto.
 import 'package:equatable/equatable.dart';
 
-class ProductEntity extends Equatable {
-  final String id;
+class RecommendedProductEntity extends Equatable {
+  final String productId;
   final String name;
-  final String description;
-  final double price;
-  final double? discountPrice;
   final String category;
-  final String imageUrl;
+  final double price;
   final int stock;
-  final double rating;
-  final bool isFeatured;
-  final DateTime createdAt;
+  final String status; // "new" | "regular"
+  final double relevanceScore;
+  final int paretoRank;
+  final bool isParetoFront;
 
-  const ProductEntity({
-    required this.id,
+  const RecommendedProductEntity({
+    required this.productId,
     required this.name,
-    required this.description,
-    required this.price,
-    this.discountPrice,
     required this.category,
-    required this.imageUrl,
+    required this.price,
     required this.stock,
-    this.rating = 0.0,
-    this.isFeatured = false,
-    required this.createdAt,
+    required this.status,
+    required this.relevanceScore,
+    required this.paretoRank,
+    required this.isParetoFront,
   });
 
-  double get finalPrice => discountPrice ?? price;
-  double get discountPercentage => discountPrice != null
-      ? ((price - discountPrice!) / price * 100)
-      : 0.0;
+  bool get isNew => status == 'new';
   bool get hasStock => stock > 0;
-  bool get isOnSale => discountPrice != null;
 
   @override
   List<Object?> get props => [
-        id,
+        productId,
         name,
-        description,
-        price,
-        discountPrice,
         category,
-        imageUrl,
+        price,
         stock,
-        rating,
-        isFeatured,
-        createdAt,
+        status,
+        relevanceScore,
+        paretoRank,
+        isParetoFront,
       ];
 }
