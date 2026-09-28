@@ -1,98 +1,37 @@
+// lib/data/datasources/recommendation_remote_data_source.dart
 import 'package:dio/dio.dart';
-import '../models/product_model.dart';
-import '../models/user_model.dart';
 
-/// Interfaz para Datasource Remoto
-abstract class RemoteDataSource {
-  Future<ProductModel> getProduct(String id);
-  Future<List<ProductModel>> getProducts({int page = 1, int pageSize = 20});
-  Future<List<ProductModel>> getProductsByCategory(String categoryId);
-  Future<List<ProductModel>> searchProducts(String query);
-  Future<UserModel> getUserProfile(String userId);
-  Future<void> updateUserProfile(UserModel user);
+import '../models/recommended_product_model.dart';
+
+abstract class RecommendationRemoteDataSource {
+  Future<RecommendationResponseModel> getRecommendations({
+    required String userId,
+    int maxResults = 10,
+  });
 }
 
-/// Implementación de Datasource Remoto con Dio
-class RemoteDataSourceImpl implements RemoteDataSource {
+class RecommendationRemoteDataSourceImpl implements RecommendationRemoteDataSource {
   final Dio dio;
 
-  RemoteDataSourceImpl({required this.dio});
+  RecommendationRemoteDataSourceImpl({required this.dio});
 
   @override
-  Future<ProductModel> getProduct(String id) async {
-    try {
-      final response = await dio.get('/products/$id');
-      return ProductModel.fromJson(response.data);
-    } on DioException catch (e) {
-      throw Exception('Error fetching product: ${e.message}');
-    }
-  }
-
-  @override
-  Future<List<ProductModel>> getProducts({
-    int page = 1,
-    int pageSize = 20,
+  Future<RecommendationResponseModel> getRecommendations({
+    required String userId,
+    int maxResults = 10,
   }) async {
     try {
+      // Dio.baseUrl ya debe incluir el prefijo /api/v1 (ver AppConstants).
+      // Ruta real en el backend: GET /api/v1/recommendations/{user_id}
       final response = await dio.get(
-        '/products',
-        queryParameters: {'page': page, 'pageSize': pageSize},
+        '/recommendations/$userId',
+        queryParameters: {'max_results': maxResults},
       );
-      final products = (response.data as List)
-          .map((product) => ProductModel.fromJson(product))
-          .toList();
-      return products;
-    } on DioException catch (e) {
-      throw Exception('Error fetching products: ${e.message}');
-    }
-  }
-
-  @override
-  Future<List<ProductModel>> getProductsByCategory(String categoryId) async {
-    try {
-      final response = await dio.get('/products/category/$categoryId');
-      final products = (response.data as List)
-          .map((product) => ProductModel.fromJson(product))
-          .toList();
-      return products;
-    } on DioException catch (e) {
-      throw Exception('Error fetching products by category: ${e.message}');
-    }
-  }
-
-  @override
-  Future<List<ProductModel>> searchProducts(String query) async {
-    try {
-      final response = await dio.get(
-        '/products/search',
-        queryParameters: {'q': query},
+      return RecommendationResponseModel.fromJson(
+        response.data as Map<String, dynamic>,
       );
-      final products = (response.data as List)
-          .map((product) => ProductModel.fromJson(product))
-          .toList();
-      return products;
     } on DioException catch (e) {
-      throw Exception('Error searching products: ${e.message}');
-    }
-  }
-
-  @override
-  Future<UserModel> getUserProfile(String userId) async {
-    try {
-      final response = await dio.get('/users/$userId');
-      return UserModel.fromJson(response.data);
-    } on DioException catch (e) {
-      throw Exception('Error fetching user profile: ${e.message}');
-    }
-  }
-
-  @override
-  Future<void> updateUserProfile(UserModel user) async {
-    try {
-      await dio.put('/users/${user.id}', data: user.toJson());
-    } on DioException catch (e) {
-      throw Exception('Error updating user profile: ${e.message}');
+      throw Exception('Error fetching recommendations: ${e.message}');
     }
   }
 }
-//xd
